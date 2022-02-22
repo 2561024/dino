@@ -10,6 +10,8 @@ public class NotificationEvents : StreamInteractionModule, Object {
     public string id { get { return IDENTITY.id; } }
 
     public signal void notify_content_item(ContentItem content_item, Conversation conversation);
+    public signal void notify_call_signal(Call call, Conversation conversation, bool video, bool multiparty, string conversation_display_name);
+    public signal void retract_call_signal(Call call, Conversation conversation);
 
     private StreamInteractor stream_interactor;
     private Future<NotificationProvider> notifier;
@@ -122,9 +124,11 @@ public class NotificationEvents : StreamInteractionModule, Object {
         string conversation_display_name = get_conversation_display_name(stream_interactor, conversation, null);
 
         NotificationProvider notifier = yield notifier.wait_async();
+        notify_call_signal(call, conversation, video, multiparty, conversation_display_name);
         yield notifier.notify_call(call, conversation, video, multiparty, conversation_display_name);
         call.notify["state"].connect(() => {
             if (call.state != Call.State.RINGING) {
+                retract_call_signal(call, conversation);
                 notifier.retract_call_notification.begin(call, conversation);
             }
         });
