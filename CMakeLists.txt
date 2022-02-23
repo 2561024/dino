@@ -76,7 +76,6 @@ set_path(APPDATA_FILE_INSTALL_DIR "${SHARE_INSTALL_PREFIX}/metainfo" "Installati
 set_path(DESKTOP_FILE_INSTALL_DIR "${SHARE_INSTALL_PREFIX}/applications" "Installation directory for .desktop files")
 set_path(SERVICE_FILE_INSTALL_DIR "${SHARE_INSTALL_PREFIX}/dbus-1/services" "Installation directory for .service files")
 set_path(ICON_INSTALL_DIR "${SHARE_INSTALL_PREFIX}/icons" "Installation directory for icons")
-set_path(SOUND_INSTALL_DIR "${SHARE_INSTALL_PREFIX}/sounds/dino" "Installation directory for sounds")
 set_path(INCLUDE_INSTALL_DIR "${EXEC_INSTALL_PREFIX}/include" "Installation directory for C header files")
 set_path(LIB_INSTALL_DIR "${EXEC_INSTALL_PREFIX}/${LIBDIR_NAME}" "Installation directory for object code libraries")
 set_path(LOCALE_INSTALL_DIR "${SHARE_INSTALL_PREFIX}/locale" "Installation directory for locale files")

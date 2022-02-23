@@ -2,7 +2,6 @@ namespace Dino {
 
 private extern const string SYSTEM_LIBDIR_NAME;
 private extern const string SYSTEM_PLUGIN_DIR;
-private extern const string SOUND_INSTALL_DIR;
 
 public class SearchPathGenerator {
 
@@ -21,19 +20,6 @@ public class SearchPathGenerator {
             }
         }
         return locale_dir ?? locale_install_dir;
-    }
-
-    public string get_soundfile_path(string soundfile_name) throws IOError {
-        string soundfile_path = "";
-        if (Path.get_dirname(exec_path).contains("build")) {
-            soundfile_path = Path.build_filename(Path.get_dirname(exec_path), "sounds", soundfile_name);
-        } else {
-            soundfile_path = Path.build_filename(SOUND_INSTALL_DIR, "sounds", "dino", soundfile_name);
-        }
-        if (FileUtils.test(soundfile_path, FileTest.IS_REGULAR)) {
-            return File.parse_name(soundfile_path).get_path(); // relative to absolute
-        }
-        throw new IOError.NOT_FOUND(@"Sound file '$(soundfile_path)' could not be found.");
     }
 
     public string[] get_plugin_paths() {
