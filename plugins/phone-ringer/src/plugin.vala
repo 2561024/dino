@@ -46,15 +46,17 @@ public class Plugin : RootInterface, Object {
         var bus2 = dialer.get_bus();
         bus2.add_watch(0, dialer_bus_callback);
 
-
-        app.stream_interactor.get_module(NotificationEvents.IDENTITY).notify_call_signal.connect((call, conversation, video, multiparty, conversation_display_name) => {
+        app.stream_interactor.get_module(Calls.IDENTITY).call_incoming.connect((call, state, conversation, video, multiparty) => {
             ringing = true;
             ringer.set_state(Gst.State.PLAYING);
-        });
 
-        app.stream_interactor.get_module(NotificationEvents.IDENTITY).retract_call_signal.connect((call, conversation) => {
-            ringing = false;
-            ringer.set_state(Gst.State.NULL);
+            call.notify["state"].connect(() => {
+                if (call.state != Dino.Entities.Call.State.RINGING) {
+                    ringing = false;
+                    ringer.set_state(Gst.State.NULL);
+                }
+            });
+
         });
 
         app.stream_interactor.get_module(Calls.IDENTITY).call_outgoing.connect((call, state, conversation) => {
