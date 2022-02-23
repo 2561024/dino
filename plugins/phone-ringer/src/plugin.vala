@@ -4,79 +4,68 @@ public class Plugin : RootInterface, Object {
 
     public Dino.Application app;
 
-    private string incoming_path;
-    private bool ringing = false;
-    private Gst.Element ringer;
-    private string outgoing_path;
-    private bool dialing = false;
-    private Gst.Element dialer;
+    private Canberra.Context sound_context;
+    private const int ringer_id = 0;
+    private const int dialer_id = 1;
+    private Canberra.Proplist ringer_props;
+    private Canberra.Proplist dialer_props;
 
-
-    private bool ringer_bus_callback (Gst.Bus bus, Gst.Message message) {
-        if (message.type == Gst.MessageType.EOS && ringing) {
-            ringer.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, 0);
-        }
-        return true;
+    private void loop_ringer() {
+        sound_context.play_full(ringer_id, ringer_props, (c, id, code) => {
+            if (code != Canberra.Error.CANCELED) {
+                Idle.add(() => {
+                    loop_ringer();
+                    return Source.REMOVE;
+                });
+            }
+        });
     }
 
-    private bool dialer_bus_callback (Gst.Bus bus, Gst.Message message) {
-        if (message.type == Gst.MessageType.EOS && dialing) {
-            dialer.seek_simple(Gst.Format.TIME, Gst.SeekFlags.FLUSH, 0);
-        }
-        return true;
+    private void loop_dialer() {
+        sound_context.play_full(dialer_id, dialer_props, (c, id, code) => {
+            if (code != Canberra.Error.CANCELED) {
+                Idle.add(() => {
+                    loop_dialer();
+                    return Source.REMOVE;
+                });
+            }
+        });
     }
 
     public void registered(Dino.Application app) {
         this.app = app;
 
-        try {
-            incoming_path = app.search_path_generator.get_soundfile_path("phone-incoming-call.oga");
-            outgoing_path = app.search_path_generator.get_soundfile_path("phone-outgoing-calling.oga");
-        } catch (IOError e) {
-            warning(e.message);
-            return; // disable plugin
-        }
-
-        ringer = Gst.ElementFactory.make("playbin", "ringer");
-        ringer["uri"] = "file://" + incoming_path;
-        var bus1 = ringer.get_bus();
-        bus1.add_watch(0, ringer_bus_callback);
-        dialer = Gst.ElementFactory.make("playbin", "dialer");
-        dialer["uri"] = "file://" + outgoing_path;
-        var bus2 = dialer.get_bus();
-        bus2.add_watch(0, dialer_bus_callback);
+        Canberra.Context.create(out sound_context);
+        Canberra.Proplist.create(out ringer_props);
+        Canberra.Proplist.create(out dialer_props);
+        ringer_props.sets(Canberra.PROP_EVENT_ID, "phone-incoming-call");
+        ringer_props.sets(Canberra.PROP_EVENT_DESCRIPTION, "Incoming call");
+        dialer_props.sets(Canberra.PROP_EVENT_ID, "phone-outgoing-calling");
+        dialer_props.sets(Canberra.PROP_EVENT_DESCRIPTION, "Outgoing call");
 
         app.stream_interactor.get_module(Calls.IDENTITY).call_incoming.connect((call, state, conversation, video, multiparty) => {
-            ringing = true;
-            ringer.set_state(Gst.State.PLAYING);
+
+            loop_ringer();
 
             call.notify["state"].connect(() => {
                 if (call.state != Dino.Entities.Call.State.RINGING) {
-                    ringing = false;
-                    ringer.set_state(Gst.State.NULL);
+                    sound_context.cancel(ringer_id);
                 }
             });
 
         });
 
         app.stream_interactor.get_module(Calls.IDENTITY).call_outgoing.connect((call, state, conversation) => {
-            dialing = true;
-            dialer.set_state(Gst.State.PLAYING);
+            loop_dialer();
         });
 
         app.stream_interactor.get_module(Calls.IDENTITY).call_started_or_declined.connect(() => {
-            dialing = false;
-            dialer.set_state(Gst.State.NULL);
+            sound_context.cancel(dialer_id);
         });
         
     }
 
-    public void shutdown() {
-        ringing = false;
-        ringer.set_state(Gst.State.NULL);
-        dialing = false;
-        dialer.set_state(Gst.State.NULL);
-    }
+    public void shutdown() { }
 }
 
 }
