@@ -169,6 +169,7 @@ public class Dino.CallState : Object {
                 stream.get_module(Xep.CallInvites.Module.IDENTITY).send_retract(stream, cim_counterpart, cim_call_id, cim_message_type);
             }
             call.state = Call.State.MISSED;
+            stream_interactor.get_module(Calls.IDENTITY).call_started_or_declined();
         } else {
             return;
         }
