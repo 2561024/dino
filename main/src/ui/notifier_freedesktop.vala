@@ -117,7 +117,6 @@ public class Dino.Ui.FreeDesktopNotifier : NotificationProvider, Object {
 
         HashTable<string, Variant> hash_table = new HashTable<string, Variant>(null, null);
         hash_table["image-path"] = "call-start-symbolic";
-        hash_table["sound-name"] = new Variant.string("phone-incoming-call");
         hash_table["urgency"] = new Variant.byte(2);
         hash_table["desktop-entry"] = new Variant.string(Dino.Application.get_default().get_application_id());
         string[] actions = new string[] {"default", "Open conversation", "reject", _("Reject"), "accept", _("Accept")};
