@@ -9,6 +9,7 @@ namespace Dino {
 
         public signal void call_incoming(Call call, CallState state, Conversation conversation, bool video, bool multiparty);
         public signal void call_outgoing(Call call, CallState state, Conversation conversation);
+        public signal void call_started_or_declined();
 
         public signal void call_terminated(Call call, string? reason_name, string? reason_text);
         public signal void conference_info_received(Call call, Xep.Coin.ConferenceInfo conference_info);
@@ -380,6 +381,7 @@ namespace Dino {
                     call_states[call].rename_peer(jmi_request_peer[call].jid, from);
                     jmi_request_peer[call].call_resource.begin(from);
                 }
+                call_started_or_declined();
             });
             mi_module.session_rejected.connect((from, to, sid) => {
                 PeerState? peer_state = get_peer_by_sid(account, sid, from, to);
@@ -396,8 +398,10 @@ namespace Dino {
                 call.state = Call.State.DECLINED;
                 call_states[call].terminated(from, Xep.Jingle.ReasonElement.DECLINE, "JMI reject");
                 remove_call_from_datastructures(call);
+                call_started_or_declined();
             });
             mi_module.session_retracted.connect((from, to, sid) => {
+                call_started_or_declined();
                 PeerState? peer_state = get_peer_by_sid(account, sid, from, to);
                 if (peer_state == null) return;
                 Call call = peer_state.call;
