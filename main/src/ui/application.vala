@@ -24,8 +24,10 @@ public class Dino.Ui.Application : Gtk.Application, Dino.Application {
     public SearchPathGenerator? search_path_generator { get; set; }
 
     internal static bool print_version = false;
+    internal static bool start_minimized_arg = false;
     private const OptionEntry[] options = {
         { "version", 0, 0, OptionArg.NONE, ref print_version, "Display version number", null },
+        { "minimized", 0, 0, OptionArg.NONE, ref start_minimized_arg, "Start Dino minimized", null },
         { null }
     };
 
@@ -77,6 +79,7 @@ public class Dino.Ui.Application : Gtk.Application, Dino.Application {
         });
 
         activate.connect(() => {
+
             if (window == null) {
                 controller = new MainWindowController(this, stream_interactor, db);
                 config = new Config(db);
@@ -84,8 +87,21 @@ public class Dino.Ui.Application : Gtk.Application, Dino.Application {
                 controller.set_window(window);
 
                 setup_systray();
+
+                if (start_minimized_arg || settings.start_minimized) {
+                    if (!settings.systray) {
+                        /* becomes window.minimize() in gtk4 */
+                        window.iconify();
+                        window.present();
+                    }
+                } else {
+                    window.present();
+                }
+
+            } else {
+                window.present();
             }
-            window.present();
+
         });
     }
 
@@ -127,7 +143,6 @@ public class Dino.Ui.Application : Gtk.Application, Dino.Application {
             title = "Dino",
             status = "Active",
             icon_name = "im.dino.Dino",
-            is_menu = true,
             text_direction = get_locale_direction() == TextDirection.RTL ? "rtl" : "ltr"
         };
 

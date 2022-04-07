@@ -303,7 +303,7 @@ public class StatusNotifierItem : Object {
     public string category { get; set; }
     public string status { get; set; }
     public int32 window_id { get; set; }
-    public bool is_menu { get; set; }
+    public bool is_menu = false;
     public string icon_name { get; set; }
     public string? overlay_icon_name { get; set; }
     public string? attention_icon_name { get; set; }
@@ -345,6 +345,13 @@ public class StatusNotifierItem : Object {
 
     private void on_name_acquired (DBusConnection dbus_connection) {
         DBusStatusNotifierWatcher watcher = Bus.get_proxy_sync(BusType.SESSION, "org.kde.StatusNotifierWatcher", "/StatusNotifierWatcher");
+
+        watcher.host_registered.connect(() => {
+            if (!(name in watcher.registered_items)) {
+                watcher.register_item(name);
+            }
+        });
+
         watcher.register_item(name);
     }
 
